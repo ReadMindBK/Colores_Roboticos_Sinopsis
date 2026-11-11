@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audio Diccionario</title>
+  
+  <style>
+    /* Estilos extraídos de CSS */
+    body {
+      font-family: Arial, sans-serif;
+      background:
+      margin: 0;
+    }
+
+    .wrap {
+      max-width: 420px;
+      margin: auto;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .cover {
+      width: 100%;
+      border-radius: 18px;
+    }
+
+    button {
+      padding: 10px 16px;
+      margin: 8px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    #play {
+      width: 200px;
+      padding: 12px;
+      border: none;
+      border-radius: 14px;
+      background: #6527F5;
+      color: white;
+      font-weight: bold;
+      font-size: 20px;
+      cursor: pointer;
+      transition: .2s;
+    }
+
+    .jump {
+      display: block;
+      width: 100%;
+      margin: 0;
+      background: #6527F5;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .active {
+      background: #ff8c1a !important;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 140, 26, 0.8);
+    }
+
+    /* =========================================================
+       BARRA DE PROGRESO
+       ========================================================= */
+
+    input[type="range"] {
+      width: 80%;
+      display: block;
+      margin: 10px auto 15px auto;
+
+      -webkit-appearance: none;
+      appearance: none;
+
+      /* 
+         La barra se pinta dinámicamente mediante JavaScript.
+         Azul = parte reproducida
+         Gris = parte restante
+      */
+      background: linear-gradient(
+        to right,
+        #6527F5 0%,
+        #6527F5 0%,
+        #e0e0e0 0%,
+        #e0e0e0 100%
+      );
+
+      outline: none;
+      border-radius: 4px;
+    }
+
+    /* =========================================================
+       BARRA - CHROME / EDGE / SAFARI
+       ========================================================= */
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      border-radius: 4px;
+    }
+
+    /* =========================================================
+       BARRA - FIREFOX
+       ========================================================= */
+
+    input[type="range"]::-moz-range-track {
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      border-radius: 4px;
+    }
+
+    /* =========================================================
+       PUNTO DE LA BARRA - CHROME / EDGE / SAFARI
+       ========================================================= */
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+
+      height: 18px;
+      width: 18px;
+
+      border-radius: 50%;
+
+      /* MISMO AZUL QUE LA PARTE RECORRIDA */
+      background: #6527F5;
+
+      cursor: pointer;
+
+      margin-top: -6px;
+    }
+
+    /* =========================================================
+       PUNTO DE LA BARRA - FIREFOX
+       ========================================================= */
+
+    input[type="range"]::-moz-range-thumb {
+      height: 18px;
+      width: 18px;
+
+      border-radius: 50%;
+
+      /* MISMO AZUL QUE LA PARTE RECORRIDA */
+      background: #6527F5;
+
+      border: none;
+
+      cursor: pointer;
+    }
+
+    #cur,
+    #dur {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    /* =========================================================
+       BOTÓN FINAL CON IMAGEN
+       ========================================================= */
+
+    .contenedor-enlace-web {
+      text-align: center;
+      margin-top: 25px; 
+      margin-bottom: 15px;
+      width: 100%;
+    }
+
+    .enlace-imagen {
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .imagen-boton {
+      max-width: 260px;
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      transition: transform 0.2s ease;
+    }
+
+    .imagen-boton:hover {
+      transform: scale(1.05);
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrap">
+
+    <img src="portada.png" class="cover" alt="Portada">
+    
+    <audio id="a" src="audio.mp3"></audio>
+    
+    <button id="play">▶ Escuchar</button>
+    
+    <input id="prog" type="range" min="0" value="0">
+    
+    <div>
+      <span id="cur">0:00</span> / <span id="dur">0:00</span>
+    </div>
+
+    <!-- Contenedor para la lista de capítulos/secciones -->
+    <div id="buttons"></div>
+
+    <!-- BOTÓN FINAL CON IMAGEN -->
+    <div class="contenedor-enlace-web">
+
+      <a href="https://readmindbk.github.io/WEB/" 
+         class="enlace-imagen" 
+         target="_blank">
+
+        <img class="imagen-boton" 
+             src="web.png" 
+             alt="Sitio Web">
+
+      </a>
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /* =========================================================
+       SECCIONES DEL AUDIO
+       ========================================================= */
+
+    const sections = [
+      {t: 13.5, n: '1 TITAC'},
+      {t: 30.3, n: '2 EXCAV'},
+      {t: 47, n: '3 DESGUA'},
+      {t: 63.5, n: '4 VECTOR'},
+      {t: 79.3, n: '5 AERO'},
+      {t: 98.3, n: '6 FAROS'},
+      {t: 113.5, n: '7 JETCO'},
+      {t: 129.8, n: '8 CHATER'},
+      {t: 142.8, n: '9 SOLERIS'},
+      {t: 157.5, n: '10 SONDER'},
+      {t: 172.3, n: '11 MEZCLU'},
+      {t: 186.8, n: '12 DRAGA'},
+      {t: 203, n: '13 VORAS'},
+      {t: 219.5, n: '14 GEOTER'},
+      {t: 234, n: '15 MANTIS'},
+      {t: 250.6, n: '16 MECA'},
+      {t: 266.2, n: '17 RASTRER'},
+      {t: 282.6, n: '18 EXPO'},
+      {t: 296.8, n: '19 ANTIX'},
+      {t: 311.9, n: '20 DOSCU'},
+      {t: 326.8, n: '21 SUBKRAK'},
+      {t: 342, n: '22 REPA'},
+      {t: 358.3, n: '23 MULTI'},
+      {t: 375.3, n: '24 GUARDER'},
+      {t: 390.5, n: '25 PUNCHER'},
+      {t: 406, n: '26 TANQUER'},
+      {t: 422.5, n: '27 ASTREL'},
+      {t: 437.7, n: '28 CENTIL'},
+      {t: 453.7, n: '29 CRISTEL'},
+      {t: 470, n: '30 RUTER'}
+    ];
+
+
+    /* =========================================================
+       ELEMENTOS HTML
+       ========================================================= */
+
+    const a = document.getElementById('a');
+    const b = document.getElementById('buttons');
+    const p = document.getElementById('play');
+    const pr = document.getElementById('prog');
+    const c = document.getElementById('cur');
+    const d = document.getElementById('dur');
+
+
+    /* =========================================================
+       CREAR BOTONES DE SALTO
+       ========================================================= */
+
+    sections.forEach((s) => {
+
+      const bt = document.createElement('button');
+
+      bt.className = 'jump';
+
+      bt.textContent = s.n;
+
+      bt.onclick = () => {
+        a.currentTime = s.t;
+      };
+
+      b.appendChild(bt);
+
+    });
+
+
+    /* =========================================================
+       FORMATEAR TIEMPO
+       ========================================================= */
+
+    function fmt(x) {
+
+      if (isNaN(x)) return "0:00";
+
+      const min = Math.floor(x / 60);
+
+      const sec = Math.floor(x % 60);
+
+      return `${min}:${String(sec).padStart(2, '0')}`;
+
+    }
+
+
+    /* =========================================================
+       ACTUALIZAR COLOR DE LA BARRA
+       ========================================================= */
+
+    function updateProgressBar() {
+
+      /*
+         Calculamos qué porcentaje del audio se reprodujo.
+      */
+
+      if (!a.duration || !isFinite(a.duration)) {
+        return;
+      }
+
+      const percentage = (a.currentTime / a.duration) * 100;
+
+
+      /*
+         Pintamos:
+
+         AZUL   = parte reproducida
+         GRIS   = parte restante
+      */
+
+      pr.style.background = `
+        linear-gradient(
+          to right,
+          #6527F5 0%,
+          #6527F5 ${percentage}%,
+          #e0e0e0 ${percentage}%,
+          #e0e0e0 100%
+        )
+      `;
+
+    }
+
+
+    /* =========================================================
+       BOTÓN REPRODUCIR / PAUSA
+       ========================================================= */
+
+    p.onclick = () => {
+
+      if (a.paused) {
+
+        a.play();
+
+        p.textContent = "⏸ Pausa";
+
+        p.animate(
+          [
+            { transform: "scale(1.2)" },
+            { transform: "scale(1.08)" },
+            { transform: "scale(1.2)" }
+          ],
+          { duration: 250 }
+        );
+
+      } else {
+
+        a.pause();
+
+        p.textContent = "▶ Escuchar";
+
+      }
+
+    };
+
+
+    /* =========================================================
+       CUANDO SE CONOCE LA DURACIÓN DEL AUDIO
+       ========================================================= */
+
+    a.addEventListener("loadedmetadata", () => {
+
+      pr.min = 0;
+
+      pr.max = a.duration;
+
+      pr.step = 0.01;
+
+      pr.value = 0;
+
+      c.textContent = fmt(0);
+
+      d.textContent = fmt(a.duration);
+
+      /* Iniciar barra completamente gris */
+      updateProgressBar();
+
+    });
+
+
+    /* =========================================================
+       ACTUALIZAR BARRA, TIEMPO Y CAPÍTULO ACTIVO
+       ========================================================= */
+
+    a.addEventListener("timeupdate", () => {
+
+      /* Actualizar posición */
+      pr.value = a.currentTime;
+
+      /* Actualizar tiempo */
+      c.textContent = fmt(a.currentTime);
+
+      /* ACTUALIZAR COLOR DE LA BARRA */
+      updateProgressBar();
+
+
+      /* Determinar capítulo activo */
+
+      const activeIndex =
+        sections.filter(s => a.currentTime >= s.t).length - 1;
+
+
+      document.querySelectorAll(".jump").forEach((btn, i) => {
+
+        btn.classList.toggle(
+          "active",
+          i === activeIndex
+        );
+
+      });
+
+    });
+
+
+    /* =========================================================
+       PERMITIR MOVER LA BARRA MANUALMENTE
+       ========================================================= */
+
+    pr.addEventListener("input", () => {
+
+      a.currentTime = Number(pr.value);
+
+      /* Actualizar inmediatamente el color */
+      updateProgressBar();
+
+    });
+
+
+    /* =========================================================
+       CUANDO TERMINA EL AUDIO
+       ========================================================= */
+
+    a.addEventListener("ended", () => {
+
+      p.textContent = "▶ Escuchar";
+
+      pr.value = pr.max;
+
+      /* Barra completamente azul */
+      updateProgressBar();
+
+    });
+
+  </script>
+
+</body>
+</html>
